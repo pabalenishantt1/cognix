@@ -22,7 +22,7 @@ export default function OnboardingPage() {
           Connect your wallet
         </h1>
         <p className="text-muted-foreground">
-          To continue to Cognix, please connect your wallet.
+          To continue to Mindlink, please connect your wallet.
         </p>
         <div className="flex justify-center">
           <WalletConnect />
