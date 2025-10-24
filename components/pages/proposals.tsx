@@ -1,11 +1,12 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { AIModal } from "@/components/ai-modal"
+import { AISummaryModal } from "@/components/ai-summary-modal"
 import { ThumbsUp, ThumbsDown, Sparkles } from "lucide-react"
+import { VoteButtons } from "@/components/vote-buttons"
 
 interface Proposal {
   id: string
@@ -18,47 +19,38 @@ interface Proposal {
 }
 
 export function ProposalsPage() {
-  const [selectedProposal, setSelectedProposal] = useState<Proposal | null>(null)
+  const [selectedProposal, setSelectedProposal] = useState<any | null>(null)
   const [showAIModal, setShowAIModal] = useState(false)
+  const [proposals, setProposals] = useState<Array<any>>([])
+  const [loading, setLoading] = useState<boolean>(true)
+  const [error, setError] = useState<string | null>(null)
 
-  const proposals: Proposal[] = [
-    {
-      id: "1",
-      title: "Increase Treasury Allocation for Development",
-      author: "Alice Chen",
-      status: "active",
-      description: "Proposal to allocate 15% more funds to development initiatives",
-      votesFor: 234,
-      votesAgainst: 45,
-    },
-    {
-      id: "2",
-      title: "Implement New Governance Framework",
-      author: "Bob Smith",
-      status: "active",
-      description: "Modernize voting mechanisms with quadratic voting",
-      votesFor: 189,
-      votesAgainst: 67,
-    },
-    {
-      id: "3",
-      title: "Partnership with Protocol X",
-      author: "Carol Davis",
-      status: "pending",
-      description: "Strategic partnership to expand ecosystem reach",
-      votesFor: 0,
-      votesAgainst: 0,
-    },
-    {
-      id: "4",
-      title: "Community Rewards Program",
-      author: "David Wilson",
-      status: "passed",
-      description: "Launch incentive program for active community members",
-      votesFor: 412,
-      votesAgainst: 28,
-    },
-  ]
+  useEffect(() => {
+    const fetchProposals = async () => {
+      try {
+        setLoading(true)
+        setError(null)
+        const res = await fetch("/api/proposals")
+        const data = await res.json()
+        if (!res.ok) throw new Error(data?.error || "Failed to fetch proposals")
+        const normalized = (data?.proposals || []).map((p: any) => ({
+          id: p.id,
+          title: p.title,
+          author: p.author || "Somnia DAO",
+          status: p.status,
+          description: p.description,
+          votesFor: p.votes?.yes ?? 0,
+          votesAgainst: p.votes?.no ?? 0,
+        }))
+        setProposals(normalized)
+      } catch (e: any) {
+        setError(e.message || "Unknown error")
+      } finally {
+        setLoading(false)
+      }
+    }
+    fetchProposals()
+  }, [])
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -76,17 +68,20 @@ export function ProposalsPage() {
   }
 
   return (
-    <div className="p-8">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-foreground mb-2">Proposals</h1>
+    <div className="p-4 md:p-8">
+      <div className="mb-6 md:mb-8">
+        <h1 className="text-2xl md:text-3xl font-bold text-foreground mb-2">Proposals</h1>
         <p className="text-muted-foreground">Review and vote on DAO proposals</p>
       </div>
+
+      {loading && <p className="text-sm text-muted-foreground mb-4">Loading proposals...</p>}
+      {error && <p className="text-sm text-red-600 mb-4">{error}</p>}
 
       <div className="space-y-4">
         {proposals.map((proposal) => (
           <Card key={proposal.id} className="bg-card border-border hover:border-primary/50 transition-colors">
             <CardHeader>
-              <div className="flex items-start justify-between">
+              <div className="flex items-start justify-between gap-3">
                 <div className="flex-1">
                   <CardTitle className="text-card-foreground mb-2">{proposal.title}</CardTitle>
                   <CardDescription className="text-muted-foreground">by {proposal.author}</CardDescription>
@@ -97,9 +92,8 @@ export function ProposalsPage() {
             <CardContent>
               <p className="text-sm text-card-foreground mb-4">{proposal.description}</p>
 
-              {/* Vote Stats */}
               {proposal.status === "active" && (
-                <div className="flex gap-4 mb-4 text-sm">
+                <div className="flex flex-col sm:flex-row gap-2 sm:gap-4 mb-4 text-sm">
                   <div className="flex items-center gap-2">
                     <ThumbsUp className="w-4 h-4 text-green-600" />
                     <span className="text-card-foreground">{proposal.votesFor} votes</span>
@@ -111,8 +105,7 @@ export function ProposalsPage() {
                 </div>
               )}
 
-              {/* Action Buttons */}
-              <div className="flex gap-2">
+              <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3">
                 <Button
                   onClick={() => {
                     setSelectedProposal(proposal)
@@ -125,16 +118,7 @@ export function ProposalsPage() {
                   Summarize with AI
                 </Button>
                 {proposal.status === "active" && (
-                  <>
-                    <Button variant="default" className="gap-2">
-                      <ThumbsUp className="w-4 h-4" />
-                      Vote Yes
-                    </Button>
-                    <Button variant="outline" className="gap-2 bg-transparent">
-                      <ThumbsDown className="w-4 h-4" />
-                      Vote No
-                    </Button>
-                  </>
+                  <VoteButtons proposalId={proposal.id} />
                 )}
                 <Button variant="ghost">View Details</Button>
               </div>
@@ -143,8 +127,9 @@ export function ProposalsPage() {
         ))}
       </div>
 
-      {/* AI Modal */}
-      {showAIModal && selectedProposal && <AIModal proposal={selectedProposal} onClose={() => setShowAIModal(false)} />}
+      {showAIModal && selectedProposal && (
+        <AISummaryModal proposal={selectedProposal} onClose={() => setShowAIModal(false)} />
+      )}
     </div>
   )
 }

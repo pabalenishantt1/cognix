@@ -1,34 +1,23 @@
 "use client"
 
-import { useState } from "react"
-import { Sidebar } from "@/components/sidebar"
-import { DashboardPage } from "@/components/pages/dashboard"
-import { ProposalsPage } from "@/components/pages/proposals"
-import { ReportsPage } from "@/components/pages/reports"
-import { SettingsPage } from "@/components/pages/settings"
+import { useEffect } from "react"
+import { useAccount } from "wagmi"
+import { useRouter } from "next/navigation"
+import OnboardingPage from "./onboarding/page"
 
 export default function Home() {
-  const [currentPage, setCurrentPage] = useState("dashboard")
+  const { isConnected } = useAccount()
+  const router = useRouter()
 
-  const renderPage = () => {
-    switch (currentPage) {
-      case "dashboard":
-        return <DashboardPage />
-      case "proposals":
-        return <ProposalsPage />
-      case "reports":
-        return <ReportsPage />
-      case "settings":
-        return <SettingsPage />
-      default:
-        return <DashboardPage />
+  useEffect(() => {
+    if (isConnected) {
+      router.replace('/dashboard')
     }
+  }, [isConnected, router])
+
+  if (!isConnected) {
+    return <OnboardingPage />
   }
 
-  return (
-    <div className="flex h-screen bg-background">
-      <Sidebar currentPage={currentPage} onPageChange={setCurrentPage} />
-      <main className="flex-1 overflow-auto">{renderPage()}</main>
-    </div>
-  )
+  return null
 }
