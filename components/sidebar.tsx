@@ -1,11 +1,11 @@
-"use client"
+"use client";
 
-import { LayoutDashboard, FileText, BarChart3, Settings } from "lucide-react"
-import { Button } from "@/components/ui/button"
+import { LayoutDashboard, FileText, BarChart3, Settings } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 interface SidebarProps {
-  currentPage: string
-  onPageChange: (page: string) => void
+  currentPage: string;
+  onPageChange: (page: string) => void;
 }
 
 export function Sidebar({ currentPage, onPageChange }: SidebarProps) {
@@ -14,25 +14,20 @@ export function Sidebar({ currentPage, onPageChange }: SidebarProps) {
     { id: "proposals", label: "Proposals", icon: FileText },
     { id: "reports", label: "Reports", icon: BarChart3 },
     { id: "settings", label: "Settings", icon: Settings },
-  ]
+  ];
 
   return (
-    <aside className="w-64 bg-sidebar border-r border-sidebar-border flex flex-col">
+    <aside className="w-64 h-full bg-sidebar border-r border-sidebar-border flex flex-col">
       {/* Header */}
       <div className="p-6 border-b border-sidebar-border">
-        <h1 className="text-2xl font-bold text-sidebar-foreground flex items-center gap-2">
-          <div className="w-8 h-8 bg-sidebar-primary rounded-lg flex items-center justify-center">
-            <span className="text-sidebar-primary-foreground font-bold">ML</span>
-          </div>
-          MindLink
-        </h1>
+        <h1 className="text-2xl font-bold text-sidebar-foreground">Cognix</h1>
       </div>
 
       {/* Navigation */}
       <nav className="flex-1 p-4 space-y-2">
         {menuItems.map((item) => {
-          const Icon = item.icon
-          const isActive = currentPage === item.id
+          const Icon = item.icon;
+          const isActive = currentPage === item.id;
           return (
             <Button
               key={item.id}
@@ -47,14 +42,16 @@ export function Sidebar({ currentPage, onPageChange }: SidebarProps) {
               <Icon className="w-5 h-5" />
               {item.label}
             </Button>
-          )
+          );
         })}
       </nav>
 
       {/* Footer */}
       <div className="p-4 border-t border-sidebar-border">
-        <div className="text-xs text-sidebar-foreground/60">DAO Facilitator v1.0</div>
+        <div className="text-xs text-sidebar-foreground/60">
+          DAO Facilitator v1.0
+        </div>
       </div>
     </aside>
-  )
+  );
 }

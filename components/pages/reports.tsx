@@ -66,9 +66,9 @@ export function ReportsPage() {
   }
 
   return (
-    <div className="p-8">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-foreground mb-2">Reports</h1>
+    <div className="p-4 md:p-8">
+      <div className="mb-6 md:mb-8">
+        <h1 className="text-2xl md:text-3xl font-bold text-foreground mb-2">Reports</h1>
         <p className="text-muted-foreground">Voting history and AI recommendations</p>
       </div>
 
