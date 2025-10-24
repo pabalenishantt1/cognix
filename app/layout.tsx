@@ -8,7 +8,7 @@ const _geist = Geist({ subsets: ["latin"] })
 const _geistMono = Geist_Mono({ subsets: ["latin"] })
 
 export const metadata: Metadata = {
-  title: "MindLink - AI DAO Facilitator",
+  title: "Cognix",
   description: "AI-powered DAO proposal analysis and voting",
   generator: "v0.app",
 }
