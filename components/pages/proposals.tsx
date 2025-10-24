@@ -31,6 +31,11 @@ export function ProposalsPage() {
         setLoading(true)
         setError(null)
         const res = await fetch("/api/proposals")
+        const ct = res.headers.get("content-type") || ""
+        if (!ct.includes("application/json")) {
+          const text = await res.text()
+          throw new Error(`API returned non-JSON (${res.status}): ${text.slice(0, 120)}...`)
+        }
         const data = await res.json()
         if (!res.ok) throw new Error(data?.error || "Failed to fetch proposals")
         const normalized = (data?.proposals || []).map((p: any) => ({

@@ -123,7 +123,7 @@ export function SettingsPage() {
               Mainnet
             </p>
             <p className="text-card-foreground">
-              <span className="text-muted-foreground">DAO:</span> Cognix
+              <span className="text-muted-foreground">DAO:</span> Mindlink
               Governance
             </p>
           </div>
