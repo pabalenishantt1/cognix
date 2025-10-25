@@ -23,7 +23,7 @@ export function SettingsPage() {
     try {
       disconnect();
     } finally {
-      window.location.href = "https://cognix.framer.ai/";
+      window.location.href = "https://mindlink.framer.ai/";
     }
   };
 

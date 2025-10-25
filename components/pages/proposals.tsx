@@ -41,7 +41,8 @@ export function ProposalsPage() {
         const normalized = (data?.proposals || []).map((p: any) => ({
           id: p.id,
           title: p.title,
-          author: p.author || "Somnia DAO",
+          // Always display a friendly author label; do not show raw address
+          author: "Somnia DAO",
           status: p.status,
           description: p.description,
           votesFor: p.votes?.yes ?? 0,

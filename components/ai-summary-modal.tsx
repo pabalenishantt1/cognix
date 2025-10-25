@@ -61,7 +61,7 @@ export function AISummaryModal({ proposal, onClose }: AISummaryModalProps) {
             <Sparkles className="w-5 h-5 text-primary" />
             <div>
               <CardTitle className="text-card-foreground">AI Summary</CardTitle>
-              <CardDescription>Powered by Cognix AI Engine</CardDescription>
+              <CardDescription>Powered by mindlink AI Engine</CardDescription>
             </div>
           </div>
           <Button

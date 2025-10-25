@@ -20,9 +20,7 @@ export function Sidebar({ currentPage, onPageChange }: SidebarProps) {
     <aside className="w-64 h-full bg-sidebar border-r border-sidebar-border flex flex-col">
       {/* Header */}
       <div className="p-6 border-b border-sidebar-border">
-        <h1 className="text-2xl font-bold text-sidebar-foreground">
-          mindlink.
-        </h1>
+        <h1 className="text-2xl font-bold text-sidebar-foreground">mindlink</h1>
       </div>
 
       {/* Navigation */}

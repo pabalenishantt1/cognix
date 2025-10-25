@@ -5,7 +5,7 @@ const CHAIN_ID = Number(process.env.NEXT_PUBLIC_CHAIN_ID || 50312);
 const RPC_URL = process.env.NEXT_PUBLIC_SOMNIA_RPC_URL || "https://api.infra.mainnet.somnia.network/";
 const CONTRACT_ADDRESS = (process.env.NEXT_PUBLIC_MINDLINK_CONTRACT_ADDRESS || "") as `0x${string}`;
 
-// Minimal ABI aligned to MindLinkDAO.sol: getProposal(uint256) returns tuple
+// Minimal ABI aligned to MindLinkDAO.sol: functions + events
 export const MINDLINK_ABI = [
   {
     inputs: [{ name: "proposalId", type: "uint256" }],
@@ -22,6 +22,31 @@ export const MINDLINK_ABI = [
     ],
     stateMutability: "view",
     type: "function",
+  },
+  {
+    inputs: [],
+    name: "proposalsCount",
+    outputs: [{ name: "", type: "uint256" }],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    type: "event",
+    name: "ProposalCreated",
+    inputs: [
+      { name: "id", type: "uint256", indexed: true },
+      { name: "creator", type: "address", indexed: true },
+      { name: "endAt", type: "uint256", indexed: false },
+    ],
+  },
+  {
+    type: "event",
+    name: "Voted",
+    inputs: [
+      { name: "id", type: "uint256", indexed: true },
+      { name: "voter", type: "address", indexed: true },
+      { name: "support", type: "bool", indexed: false },
+    ],
   },
 ] as const;
 
@@ -41,21 +66,40 @@ export const publicClient = createPublicClient({
   transport: http(RPC_URL),
 });
 
-export async function getProposalsFromChain(): Promise<string[]> {
+export async function getProposalsFromChain(): Promise<Array<{
+  id: string;
+  title: string;
+  description: string;
+  creator: `0x${string}`;
+  yesVotes: number;
+  noVotes: number;
+  createdAt: number;
+  endAt: number;
+}>> {
   if (!CONTRACT_ADDRESS) {
     throw new Error("Contract address not configured (NEXT_PUBLIC_MINDLINK_CONTRACT_ADDRESS)");
   }
 
   try {
-    // proposals length lives at slot 0 for a top-level dynamic array
-    const lenHex = await publicClient.getStorageAt({
+    const lengthResult = await publicClient.readContract({
       address: CONTRACT_ADDRESS,
-      slot: "0x0",
+      abi: MINDLINK_ABI,
+      functionName: "proposalsCount",
     });
-    const length = Number(lenHex ? BigInt(lenHex) : 0n);
+    const length = Number(lengthResult);
     if (!Number.isFinite(length) || length < 0) return [];
 
-    const titles: string[] = [];
+    const proposals: Array<{
+      id: string;
+      title: string;
+      description: string;
+      creator: `0x${string}`;
+      yesVotes: number;
+      noVotes: number;
+      createdAt: number;
+      endAt: number;
+    }> = [];
+
     for (let i = 0; i < length; i++) {
       const res = (await publicClient.readContract({
         address: CONTRACT_ADDRESS,
@@ -64,12 +108,105 @@ export async function getProposalsFromChain(): Promise<string[]> {
         args: [BigInt(i)],
       })) as readonly [bigint, string, string, `0x${string}`, bigint, bigint, bigint, bigint];
 
-      const [, title] = res;
-      titles.push(title);
+      const [id, title, description, creator, yesVotes, noVotes, createdAt, endAt] = res;
+      proposals.push({
+        id: id.toString(),
+        title,
+        description,
+        creator,
+        yesVotes: Number(yesVotes),
+        noVotes: Number(noVotes),
+        createdAt: Number(createdAt),
+        endAt: Number(endAt),
+      });
     }
-    return titles;
+    return proposals;
   } catch (err: any) {
     const reason = err?.shortMessage || err?.message || "Unknown contract read error";
     throw new Error(`getProposalsFromChain failed: ${reason}`);
   }
+}
+
+export async function getRecentActivities(limit: number = 20): Promise<Array<{
+  event: string;
+  time: string;
+  status: string;
+}>> {
+  if (!CONTRACT_ADDRESS) {
+    throw new Error("Contract address not configured (NEXT_PUBLIC_MINDLINK_CONTRACT_ADDRESS)");
+  }
+
+  const toBlock = await publicClient.getBlockNumber();
+  const span = BigInt(200000);
+  const fromBlock = toBlock > span ? toBlock - span : BigInt(0);
+
+  const createdLogs = await publicClient.getLogs({
+    address: CONTRACT_ADDRESS,
+    event: {
+      type: "event",
+      name: "ProposalCreated",
+      inputs: [
+        { name: "id", type: "uint256", indexed: true },
+        { name: "creator", type: "address", indexed: true },
+        { name: "endAt", type: "uint256", indexed: false },
+      ],
+    },
+    fromBlock,
+    toBlock,
+  });
+
+  const votedLogs = await publicClient.getLogs({
+    address: CONTRACT_ADDRESS,
+    event: {
+      type: "event",
+      name: "Voted",
+      inputs: [
+        { name: "id", type: "uint256", indexed: true },
+        { name: "voter", type: "address", indexed: true },
+        { name: "support", type: "bool", indexed: false },
+      ],
+    },
+    fromBlock,
+    toBlock,
+  });
+
+  const blockTsCache = new Map<bigint, number>();
+  const getTs = async (blockNumber: bigint) => {
+    if (blockTsCache.has(blockNumber)) return blockTsCache.get(blockNumber)!;
+    const b = await publicClient.getBlock({ blockNumber });
+    const ts = Number(b.timestamp);
+    blockTsCache.set(blockNumber, ts);
+    return ts;
+  };
+
+  const items: Array<{ event: string; time: string; status: string; _bn?: bigint; _li?: number }> = [];
+
+  for (const log of createdLogs) {
+    const id = (log as any).args?.id as bigint;
+    const ts = await getTs(log.blockNumber!);
+    items.push({
+      event: `Proposal ${id?.toString() ?? "?"} created`,
+      time: new Date(ts * 1000).toLocaleString(),
+      status: "new",
+      _bn: log.blockNumber!,
+      _li: Number(log.logIndex ?? 0),
+    });
+  }
+
+  for (const log of votedLogs) {
+    const id = (log as any).args?.id as bigint;
+    const support = (log as any).args?.support as boolean;
+    const ts = await getTs(log.blockNumber!);
+    items.push({
+      event: `Vote ${support ? "YES" : "NO"} on Proposal ${id?.toString() ?? "?"}`,
+      time: new Date(ts * 1000).toLocaleString(),
+      status: "completed",
+      _bn: log.blockNumber!,
+      _li: Number(log.logIndex ?? 0),
+    });
+  }
+
+  items.sort((a, b) => (b._bn! === a._bn! ? (b._li! - a._li!) : Number(b._bn! - a._bn!)));
+  const trimmed = items.slice(0, Math.max(1, limit)).map(({ _bn, _li, ...rest }) => rest);
+  return trimmed;
 }

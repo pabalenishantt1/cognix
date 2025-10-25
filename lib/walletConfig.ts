@@ -17,7 +17,7 @@ export const somniaMainnet = defineChain({
 });
 
 export const wagmiConfig = getDefaultConfig({
-  appName: 'Cognix',
+  appName: 'mindlink',
   projectId: (process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID as string) || 'demo',
   chains: [somniaMainnet],
   transports: {

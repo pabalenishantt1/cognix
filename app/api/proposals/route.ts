@@ -4,14 +4,17 @@ import { getProposalsFromChain } from '@/lib/contract';
 
 export async function GET() {
   try {
-    const titles = await getProposalsFromChain();
-    const proposals = titles.map((title, idx) => ({
-      id: String(idx + 1),
-      title,
-      description: '',
-      createdDate: undefined,
-      status: 'active',
-      votes: { yes: 0, no: 0 },
+    const chainProposals = await getProposalsFromChain();
+    const now = Math.floor(Date.now() / 1000);
+
+    const proposals = chainProposals.map((p) => ({
+      id: p.id,
+      title: p.title,
+      description: p.description,
+      author: p.creator,
+      createdDate: new Date(p.createdAt * 1000).toISOString(),
+      status: now < p.endAt ? 'active' : (p.yesVotes >= p.noVotes ? 'passed' : 'rejected'),
+      votes: { yes: p.yesVotes, no: p.noVotes },
     }));
 
     return NextResponse.json({ proposals });

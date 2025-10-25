@@ -89,7 +89,7 @@ export default function DashboardPage() {
           >
             <Menu className="w-5 h-5 text-foreground" />
           </button>
-          <div className="text-sm text-muted-foreground">Cognix</div>
+          <div className="text-sm text-muted-foreground">mindlink</div>
         </div>
         {renderPage()}
       </main>

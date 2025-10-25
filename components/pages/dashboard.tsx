@@ -25,6 +25,7 @@ export function DashboardPage() {
   const [proposals, setProposals] = useState<ApiProposal[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
+  const [activities, setActivities] = useState<Array<{ event: string; time: string; status: string }>>([]);
 
   useEffect(() => {
     const fetchProposals = async () => {
@@ -47,6 +48,18 @@ export function DashboardPage() {
       }
     };
     fetchProposals();
+    const fetchActivities = async () => {
+      try {
+        const res = await fetch("/api/activities");
+        const ct = res.headers.get("content-type") || "";
+        if (!ct.includes("application/json")) return;
+        const data = await res.json();
+        setActivities(Array.isArray(data?.activities) ? data.activities : []);
+      } catch {
+        // noop
+      }
+    };
+    fetchActivities();
   }, []);
 
   const metrics = useMemo(() => {
@@ -192,12 +205,9 @@ export function DashboardPage() {
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              {[
-                { event: "Proposal created", time: "2 hours ago", status: "new" },
-                { event: "AI summary generated", time: "4 hours ago", status: "completed" },
-                { event: "Voting period ended", time: "1 day ago", status: "closed" },
-                { event: "Proposal passed", time: "2 days ago", status: "passed" },
-              ].map((item, idx) => (
+              {(activities.length ? activities : [
+                { event: "No recent activity", time: "—", status: "none" },
+              ]).map((item, idx) => (
                 <div
                   key={idx}
                   className="flex items-center justify-between py-2 border-b border-border last:border-0"
@@ -216,7 +226,9 @@ export function DashboardPage() {
                         ? "bg-green-500/10 text-green-600"
                         : item.status === "closed"
                         ? "bg-gray-500/10 text-gray-600"
-                        : "bg-green-500/10 text-green-600"
+                        : item.status === "passed"
+                        ? "bg-green-500/10 text-green-600"
+                        : "bg-gray-500/10 text-gray-600"
                     }`}
                   >
                     {item.status}
