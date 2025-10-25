@@ -37,7 +37,7 @@ https://mindlink.framer.ai/
 - **RainbowKit + Wagmi** (Somnia Wallet Integration)
 - **TailwindCSS + shadcn/ui + daisyUI**
 - **Vercel (hosting)**
-- **OpenAI (for AI summaries)** — optional but recommended
+- **Gemini (for AI summaries)** 
 
 ---
 
