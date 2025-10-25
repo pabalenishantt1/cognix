@@ -16,7 +16,7 @@ Ideal for **DAO members, contributors, and core teams** who want fast clarity an
 ## 🚀 Live Deployment
 
 🔗 **Live App:**  
-https://v0-mind-link-dao-facilitator.vercel.app
+mindlink.framer.ai
 
 ---
 
