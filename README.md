@@ -16,8 +16,7 @@ Ideal for **DAO members, contributors, and core teams** who want fast clarity an
 ## 🚀 Live Deployment
 
 🔗 **Live App:**  
-mindlink.framer.ai
-
+https://mindlink.framer.ai/
 ---
 
 ## 🧩 Features
